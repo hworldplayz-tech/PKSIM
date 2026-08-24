@@ -31,11 +31,15 @@ import {
   type AdsConfig,
   type AdSlotConfig,
 } from '@/config/ads';
+import {
+  DEFAULT_WHATSAPP_CHANNEL,
+  getWhatsAppChannel,
+  saveWhatsAppChannel,
+} from '@/config/settings';
 
 const ADMIN_USERNAME = 'hworldplayz';
 const ADMIN_PASSWORD = 'hworldplayz512';
 const AUTH_KEY = 'pksim_admin_auth';
-const CHANNEL_STORAGE_KEY = 'pksim-whatsapp-channel';
 
 export function AdminPanel() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
@@ -58,12 +62,13 @@ export function AdminPanel() {
   const [previewSlot, setPreviewSlot] = useState<string | null>(null);
 
   // WhatsApp state
-  const [whatsappLink, setWhatsappLink] = useState(() => localStorage.getItem(CHANNEL_STORAGE_KEY) ?? '');
+  const [whatsappLink, setWhatsappLink] = useState(() => getWhatsAppChannel());
   const [whatsappSaved, setWhatsappSaved] = useState(false);
 
   useEffect(() => {
     // Reload ads config on mount
     setAdsConfig(getAdsConfig());
+    setWhatsappLink(getWhatsAppChannel());
   }, []);
 
   const handleLogin = (e: FormEvent) => {
@@ -111,7 +116,7 @@ export function AdminPanel() {
 
   const handleSaveWhatsapp = (e: FormEvent) => {
     e.preventDefault();
-    localStorage.setItem(CHANNEL_STORAGE_KEY, whatsappLink.trim());
+    saveWhatsAppChannel(whatsappLink);
     setWhatsappSaved(true);
     setTimeout(() => setWhatsappSaved(false), 2500);
   };

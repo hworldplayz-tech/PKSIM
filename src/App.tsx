@@ -7,7 +7,6 @@ import {
   Check,
   Copy,
   ExternalLink,
-  Lock,
   Moon,
   RotateCcw,
   Search,
@@ -20,13 +19,16 @@ import GlobalAdScripts from '@/components/GlobalAdScripts';
 import SearchingAnimation from '@/components/SearchingAnimation';
 import AdminPanel from '@/components/AdminPanel';
 import NotFound from '@/pages/not-found';
+import FollowUsPopup from '@/components/FollowUsPopup';
+import FollowSection from '@/components/FollowSection';
+import ShareFloatingButton from '@/components/ShareFloatingButton';
+import { getWhatsAppChannel, SETTINGS_UPDATED_EVENT } from '@/config/settings';
 
 type LookupState = 'idle' | 'loading' | 'success' | 'empty' | 'error';
 type JsonRecord = Record<string, unknown>;
 
 const ENDPOINT = 'https://sim-db-api.faizankhichi.me/';
 const BACKUP_ENDPOINT = 'https://sim-data.ftgmhacks.workers.dev/';
-const CHANNEL_STORAGE_KEY = 'pksim-whatsapp-channel';
 
 function isRecord(value: unknown): value is JsonRecord {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -287,13 +289,25 @@ function Home() {
   const [error, setError] = useState('');
   const [searchMode, setSearchMode] = useState<'number' | 'cnic'>('number');
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('pksim-theme') === 'dark');
-  const [whatsappLink, setWhatsappLink] = useState(() => localStorage.getItem(CHANNEL_STORAGE_KEY) ?? '');
+  const [whatsappLink, setWhatsappLink] = useState(() => getWhatsAppChannel());
   const records = useMemo(() => recordsFromPayload(payload), [payload]);
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', darkMode);
     localStorage.setItem('pksim-theme', darkMode ? 'dark' : 'light');
   }, [darkMode]);
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setWhatsappLink(getWhatsAppChannel());
+    };
+    window.addEventListener(SETTINGS_UPDATED_EVENT, handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener(SETTINGS_UPDATED_EVENT, handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
+  }, []);
 
   const performLookup = async (event?: FormEvent) => {
     event?.preventDefault();
@@ -537,8 +551,11 @@ function Home() {
           </div>
         </div>
 
-        {/* Bottom Section: Footer Ad, Disclaimer, and Footer */}
+        {/* Bottom Section: Follow Us Container, Footer Ad, Disclaimer, and Footer */}
         <div className="pb-8">
+          {/* Requirement #1: Follow Us / Join WhatsApp Community Section above footer */}
+          <FollowSection />
+
           {/* Requirement #2: Bottom Footer Banner Ad */}
           <AdSlot slotId="footerBanner" />
 
@@ -594,6 +611,8 @@ function App() {
   return (
     <>
       <GlobalAdScripts />
+      <FollowUsPopup />
+      <ShareFloatingButton />
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/admin" component={AdminPanel} />
