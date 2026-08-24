@@ -20,8 +20,8 @@ export function FollowSection() {
   }, []);
 
   return (
-    <section className="my-8 w-full">
-      <div className="relative overflow-hidden rounded-[26px] border border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 via-[hsl(var(--card))] to-emerald-500/5 p-6 sm:p-8 shadow-[0_16px_40px_rgba(16,185,129,0.08)]">
+    <section className="my-6 sm:my-8 w-full">
+      <div className="relative overflow-hidden rounded-[20px] sm:rounded-[26px] border border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 via-[hsl(var(--card))] to-emerald-500/5 p-4 sm:p-8 shadow-[0_16px_40px_rgba(16,185,129,0.08)]">
         {/* Glow decoration */}
         <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[#25D366]/15 blur-3xl" />
 

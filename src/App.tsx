@@ -409,14 +409,15 @@ function Home() {
 
   return (
     <main className="pksim-shell">
-      <div className="mx-auto flex min-h-[100dvh] w-full max-w-[980px] flex-col justify-between px-5 sm:px-8">
+      <div className="mx-auto flex min-h-[100dvh] w-full max-w-[980px] flex-col justify-between px-4 sm:px-8">
         <div>
           {/* Header */}
-          <header className="pksim-fade-in flex h-[74px] items-center justify-between border-b border-[hsl(var(--border))]">
-            <Link href="/" onClick={resetLookup} className="group flex items-center gap-3 rounded-xl text-left focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring)_/_0.3)]">
-              <LinkShareLogo size={38} />
+          <header className="pksim-fade-in flex h-[64px] sm:h-[74px] items-center justify-between border-b border-[hsl(var(--border))]">
+            <Link href="/" onClick={resetLookup} className="group flex items-center gap-2.5 sm:gap-3 rounded-xl text-left focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring)_/_0.3)]">
+              <LinkShareLogo size={34} className="sm:hidden" />
+              <LinkShareLogo size={38} className="hidden sm:block" />
               <div>
-                <span className="pksim-display text-[19px] font-bold tracking-[-0.05em] text-[hsl(var(--primary))]">
+                <span className="pksim-display text-[18px] sm:text-[19px] font-bold tracking-[-0.05em] text-[hsl(var(--primary))]">
                   PKSIM
                 </span>
                 <span className="ml-2 hidden sm:inline-block rounded-full bg-[hsl(var(--secondary))] px-2 py-0.5 text-[10px] font-bold text-[hsl(var(--secondary-foreground))]">
@@ -430,9 +431,9 @@ function Home() {
                 data-testid="button-theme-toggle"
                 onClick={() => setDarkMode((current) => !current)}
                 aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-                className="rounded-xl px-3 py-2 text-lg text-[hsl(var(--muted-foreground))] transition-colors hover:bg-[hsl(var(--secondary))] hover:text-[hsl(var(--primary))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring)_/_0.25)]"
+                className="rounded-xl p-2 sm:px-3 sm:py-2 text-base sm:text-lg text-[hsl(var(--muted-foreground))] transition-colors hover:bg-[hsl(var(--secondary))] hover:text-[hsl(var(--primary))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring)_/_0.25)]"
               >
-                {darkMode ? <Sun size={17} /> : <Moon size={17} />}
+                {darkMode ? <Sun size={16} /> : <Moon size={16} />}
               </button>
 
               {state !== 'idle' && (
@@ -440,9 +441,9 @@ function Home() {
                   type="button"
                   data-testid="button-search-again"
                   onClick={resetLookup}
-                  className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-[hsl(var(--muted-foreground))] transition-colors hover:bg-[hsl(var(--secondary))] hover:text-[hsl(var(--primary))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring)_/_0.25)]"
+                  className="inline-flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm font-semibold text-[hsl(var(--muted-foreground))] transition-colors hover:bg-[hsl(var(--secondary))] hover:text-[hsl(var(--primary))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring)_/_0.25)]"
                 >
-                  <RotateCcw size={15} />
+                  <RotateCcw size={14} />
                   <span className="hidden sm:inline">Search again</span>
                 </button>
               )}
@@ -453,28 +454,29 @@ function Home() {
           <AdSlot slotId="headerBanner" />
 
           {/* Main Hero / Search Area */}
-          <div className="flex flex-col items-center py-10 sm:py-16">
+          <div className="flex flex-col items-center py-6 sm:py-14">
             <section className="pksim-rise-in pksim-delay-1 w-full max-w-[610px] text-center">
-              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[hsl(145_54%_84%)] bg-[hsl(145_60%_97%)] px-3.5 py-1.5 text-xs font-semibold text-[hsl(var(--primary))]">
+              <div className="mb-3 sm:mb-5 inline-flex items-center gap-1.5 sm:gap-2 rounded-full border border-[hsl(145_54%_84%)] bg-[hsl(145_60%_97%)] px-3 py-1 sm:px-3.5 sm:py-1.5 text-[11px] sm:text-xs font-semibold text-[hsl(var(--primary))]">
                 <span className="pksim-blink h-1.5 w-1.5 rounded-full bg-[hsl(var(--primary))]" />
                 Live SIM & CNIC Data 2026
               </div>
 
               {/* Requirement #4: Heading "SIM data, LinkShare" */}
-              <h1 data-testid="text-page-title" className="pksim-display text-[clamp(2.7rem,7vw,4.5rem)] font-semibold leading-[0.98] tracking-[-0.075em] text-[hsl(var(--foreground))]">
+              <h1 data-testid="text-page-title" className="pksim-display text-[clamp(1.9rem,6.5vw,3.8rem)] font-semibold leading-[1.04] tracking-[-0.06em] text-[hsl(var(--foreground))]">
                 SIM data, <span className="text-[hsl(var(--primary))]">LinkShare</span>
               </h1>
 
-              <p className="mx-auto mt-4 max-w-[480px] text-[15px] leading-7 text-[hsl(var(--muted-foreground))]">
+              <p className="mx-auto mt-2 sm:mt-4 max-w-[460px] text-xs sm:text-[15px] leading-5 sm:leading-7 text-[hsl(var(--muted-foreground))]">
                 Enter any Pakistani phone number or CNIC to lookup live records instantly.
               </p>
 
-              <div className="mx-auto mt-7 flex w-fit rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-1">
+              {/* Responsive Tabs */}
+              <div className="mx-auto mt-4 sm:mt-7 flex w-full max-w-[310px] sm:w-fit rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-1 shadow-sm">
                 <button
                   type="button"
                   data-testid="tab-search-number"
                   onClick={() => changeSearchMode('number')}
-                  className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
+                  className={`flex-1 sm:flex-initial rounded-lg px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold transition-colors whitespace-nowrap text-center ${
                     searchMode === 'number'
                       ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] shadow-sm'
                       : 'text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--secondary))]'
@@ -486,7 +488,7 @@ function Home() {
                   type="button"
                   data-testid="tab-search-cnic"
                   onClick={() => changeSearchMode('cnic')}
-                  className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
+                  className={`flex-1 sm:flex-initial rounded-lg px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold transition-colors whitespace-nowrap text-center ${
                     searchMode === 'cnic'
                       ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] shadow-sm'
                       : 'text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--secondary))]'
@@ -496,10 +498,12 @@ function Home() {
                 </button>
               </div>
 
-              <form onSubmit={performLookup} className="mx-auto mt-3 max-w-[610px] rounded-[18px] border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-2 shadow-[0_14px_34px_hsl(157_35%_19%_/_0.07)]">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[hsl(var(--secondary))] text-[hsl(var(--primary))]">
-                    <Search size={19} strokeWidth={2.2} />
+              {/* Responsive Compact Search Form */}
+              <form onSubmit={performLookup} className="mx-auto mt-2.5 sm:mt-3 max-w-[610px] rounded-[18px] border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-1.5 sm:p-2 shadow-[0_14px_34px_hsl(157_35%_19%_/_0.07)]">
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <div className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-xl bg-[hsl(var(--secondary))] text-[hsl(var(--primary))]">
+                    <Search size={16} className="sm:hidden" strokeWidth={2.2} />
+                    <Search size={19} className="hidden sm:block" strokeWidth={2.2} />
                   </div>
                   <input
                     id="phone-number"
@@ -510,22 +514,23 @@ function Home() {
                     value={phone}
                     onChange={(event) => setPhone(event.target.value)}
                     placeholder={searchMode === 'number' ? 'Enter number e.g. 03001234567' : 'Enter 13-digit CNIC'}
-                    className="min-w-0 flex-1 bg-transparent px-2 text-[15px] text-left font-medium tracking-[0.01em] text-[hsl(var(--foreground))] outline-none placeholder:text-[hsl(var(--muted-foreground)_/_0.65)]"
+                    className="min-w-0 flex-1 bg-transparent px-1.5 sm:px-2 text-xs sm:text-[15px] text-left font-medium tracking-[0.01em] text-[hsl(var(--foreground))] outline-none placeholder:text-[hsl(var(--muted-foreground)_/_0.6)] placeholder:text-xs sm:placeholder:text-[14px]"
                     aria-label="Phone number or CNIC"
                   />
                   <button
                     type="submit"
                     data-testid="button-submit-lookup"
                     disabled={state === 'loading'}
-                    className="flex h-12 shrink-0 items-center gap-2 rounded-xl bg-[hsl(var(--primary))] px-5 text-sm font-bold text-[hsl(var(--primary-foreground))] transition-transform hover:-translate-y-0.5 hover:bg-[hsl(157_66%_19%)] disabled:cursor-wait disabled:opacity-70 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring)_/_0.3)]"
+                    className="flex h-10 sm:h-12 shrink-0 items-center gap-1 sm:gap-2 rounded-xl bg-[hsl(var(--primary))] px-3.5 sm:px-5 text-xs sm:text-sm font-bold text-[hsl(var(--primary-foreground))] transition-transform hover:-translate-y-0.5 hover:bg-[hsl(157_66%_19%)] disabled:cursor-wait disabled:opacity-70 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring)_/_0.3)]"
                   >
-                    {state === 'loading' ? 'Searching...' : 'Search'}
-                    <ArrowUpRight size={17} />
+                    <span>{state === 'loading' ? 'Searching' : 'Search'}</span>
+                    <ArrowUpRight size={14} className="sm:hidden" />
+                    <ArrowUpRight size={17} className="hidden sm:block" />
                   </button>
                 </div>
                 {state === 'error' && error && (
-                  <p data-testid="text-inline-error" className="mt-2 flex items-center gap-1.5 px-2 text-left text-sm font-medium text-[hsl(var(--destructive))]">
-                    <AlertCircle size={15} /> {error}
+                  <p data-testid="text-inline-error" className="mt-2 flex items-center gap-1.5 px-2 text-left text-xs sm:text-sm font-medium text-[hsl(var(--destructive))]">
+                    <AlertCircle size={14} /> {error}
                   </p>
                 )}
               </form>

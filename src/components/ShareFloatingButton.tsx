@@ -114,23 +114,23 @@ export function ShareFloatingButton() {
 
   return (
     <>
-      {/* Fixed Trigger Button on Left Center of Screen */}
-      <div className="fixed left-0 top-1/2 z-40 -translate-y-1/2">
+      {/* Fixed Trigger Button: Bottom-left on mobile, Left-center on desktop */}
+      <div className="fixed bottom-5 left-3 z-40 sm:bottom-auto sm:top-1/2 sm:left-0 sm:-translate-y-1/2">
         <button
           type="button"
           onClick={() => setIsOpen(true)}
           aria-label="Share this website"
-          className="group relative flex items-center gap-2 rounded-r-2xl border-y border-r border-[hsl(var(--primary)_/_0.4)] bg-[hsl(var(--card))] py-3 pl-2.5 pr-3 shadow-[0_8px_25px_hsl(157_66%_24%_/_0.2)] backdrop-blur-md transition-all hover:translate-x-1 hover:bg-[hsl(var(--primary))] hover:text-white"
+          className="group relative flex items-center gap-2 rounded-full border border-[hsl(var(--primary)_/_0.4)] bg-[hsl(var(--card)_/_0.95)] p-2 shadow-[0_6px_20px_hsl(157_66%_24%_/_0.25)] backdrop-blur-md transition-all hover:scale-105 hover:bg-[hsl(var(--primary))] hover:text-white sm:rounded-none sm:rounded-r-2xl sm:border-l-0 sm:py-2.5 sm:pl-2 sm:pr-3"
         >
-          <div className="relative flex h-8 w-8 items-center justify-center rounded-xl bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] shadow-md group-hover:bg-white group-hover:text-[hsl(var(--primary))]">
-            <Share2 size={16} />
-            <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+          <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] shadow-sm group-hover:bg-white group-hover:text-[hsl(var(--primary))] sm:h-7 sm:w-7 sm:rounded-xl">
+            <Share2 size={14} />
+            <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
             </span>
           </div>
 
-          <span className="hidden font-mono text-[11px] font-bold uppercase tracking-wider text-[hsl(var(--foreground))] group-hover:text-white sm:inline-block">
+          <span className="hidden font-mono text-[10px] font-bold uppercase tracking-wider text-[hsl(var(--foreground))] group-hover:text-white sm:inline-block">
             Share
           </span>
         </button>
