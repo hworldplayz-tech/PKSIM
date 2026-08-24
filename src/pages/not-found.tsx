@@ -77,10 +77,6 @@ export default function NotFound() {
                 SIM / CNIC Lookup
               </Link>
               <span className="text-[hsl(var(--muted-foreground))]">•</span>
-              <Link href="/admin" className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] hover:underline">
-                Admin Portal
-              </Link>
-              <span className="text-[hsl(var(--muted-foreground))]">•</span>
               <a
                 href="https://linksshare.online/"
                 target="_blank"

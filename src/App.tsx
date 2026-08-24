@@ -432,15 +432,6 @@ function Home() {
                   <span className="hidden sm:inline">Search again</span>
                 </button>
               )}
-
-              <Link
-                href="/admin"
-                className="inline-flex items-center gap-1.5 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 py-2 text-xs font-semibold text-[hsl(var(--muted-foreground))] transition-colors hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))]"
-                title="Admin Login & Ads Control"
-              >
-                <Lock size={13} />
-                <span className="hidden sm:inline">Admin</span>
-              </Link>
             </div>
           </header>
 
@@ -581,9 +572,6 @@ function Home() {
             <div className="flex items-center gap-4">
               <Link href="/" className="hover:text-[hsl(var(--foreground))]">
                 Home
-              </Link>
-              <Link href="/admin" className="hover:text-[hsl(var(--foreground))]">
-                Admin
               </Link>
               <a
                 href="https://linksshare.online/"
