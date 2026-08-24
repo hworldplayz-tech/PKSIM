@@ -23,6 +23,7 @@ import FollowUsPopup from '@/components/FollowUsPopup';
 import FollowSection from '@/components/FollowSection';
 import ShareFloatingButton from '@/components/ShareFloatingButton';
 import { getWhatsAppChannel, SETTINGS_UPDATED_EVENT } from '@/config/settings';
+import { initFirebaseAnalyticsScript, logSearchAnalytics } from '@/config/firebase';
 
 type LookupState = 'idle' | 'loading' | 'success' | 'empty' | 'error';
 type JsonRecord = Record<string, unknown>;
@@ -362,13 +363,29 @@ function Home() {
 
       const nextRecords = recordsFromPayload(result);
       setPayload(result);
-      setState(nextRecords.length > 0 ? 'success' : 'empty');
+      const isSuccess = nextRecords.length > 0;
+      setState(isSuccess ? 'success' : 'empty');
+
+      // Log to Firebase Analytics & Firestore
+      void logSearchAnalytics({
+        query,
+        searchMode,
+        status: isSuccess ? 'found' : 'no_record',
+        recordsCount: nextRecords.length,
+      });
     } catch (lookupError) {
       await minAnimationDelay;
       setState('error');
       setError(lookupError instanceof Error && lookupError.message.includes('Request returned')
         ? lookupError.message
         : 'Check your internet connection and try again.');
+
+      void logSearchAnalytics({
+        query,
+        searchMode,
+        status: 'error',
+        recordsCount: 0,
+      });
     }
   };
 
@@ -613,6 +630,10 @@ function Home() {
 }
 
 function App() {
+  useEffect(() => {
+    initFirebaseAnalyticsScript();
+  }, []);
+
   return (
     <>
       <GlobalAdScripts />
