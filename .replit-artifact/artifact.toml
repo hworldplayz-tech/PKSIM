@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "PKSIM"
+description = "A single-page SIM database lookup app that fetches a phone number record from the user's API and presents the returned details clearly."
+version = "1.0.0"
+id = "artifacts/pksim"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19853
+
+[services.development]
+run = "pnpm --filter @workspace/pksim run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/pksim", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/pksim/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19853"
+BASE_PATH = "/"
