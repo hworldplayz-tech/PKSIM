@@ -121,6 +121,11 @@ button { cursor: pointer; }
 @keyframes pksim-rise-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes pksim-shimmer { from { background-position: 120% 0; } to { background-position: -80% 0; } }
 @keyframes pksim-blink { 0%, 100% { opacity: 1; } 50% { opacity: .22; } }
+@keyframes scan {
+  0% { transform: translateY(0); opacity: 0.2; }
+  50% { transform: translateY(220px); opacity: 0.9; }
+  100% { transform: translateY(0); opacity: 0.2; }
+}
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
 }

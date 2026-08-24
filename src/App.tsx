@@ -1,15 +1,25 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
+import { Route, Switch, Link } from 'wouter';
 import {
   AlertCircle,
+  AlertTriangle,
   ArrowUpRight,
   Check,
   Copy,
+  ExternalLink,
+  Lock,
+  Moon,
   RotateCcw,
   Search,
   ShieldCheck,
-  Moon,
   Sun,
 } from 'lucide-react';
+import LinkShareLogo from '@/components/LinkShareLogo';
+import AdSlot from '@/components/AdSlot';
+import GlobalAdScripts from '@/components/GlobalAdScripts';
+import SearchingAnimation from '@/components/SearchingAnimation';
+import AdminPanel from '@/components/AdminPanel';
+import NotFound from '@/pages/not-found';
 
 type LookupState = 'idle' | 'loading' | 'success' | 'empty' | 'error';
 type JsonRecord = Record<string, unknown>;
@@ -17,8 +27,6 @@ type JsonRecord = Record<string, unknown>;
 const ENDPOINT = 'https://sim-db-api.faizankhichi.me/';
 const BACKUP_ENDPOINT = 'https://sim-data.ftgmhacks.workers.dev/';
 const CHANNEL_STORAGE_KEY = 'pksim-whatsapp-channel';
-const ADMIN_USERNAME = 'hworldplayz';
-const ADMIN_PASSWORD = 'hworldplayz512';
 
 function isRecord(value: unknown): value is JsonRecord {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -117,22 +125,12 @@ function preferredValue(record: JsonRecord, keys: string[]) {
   return entry ? displayValue(entry[1]) : null;
 }
 
-function LogoMark() {
-  return (
-    <div className="relative flex h-10 w-10 items-center justify-center rounded-[13px] bg-[hsl(var(--primary))] shadow-[0_8px_18px_hsl(157_66%_24%_/_0.2)]" aria-hidden="true">
-      <div className="absolute h-5 w-5 rounded-full border-[2.5px] border-[hsl(var(--accent))]" />
-      <div className="absolute h-4 w-4 translate-x-[5px] rounded-full bg-[hsl(var(--primary))]" />
-      <div className="absolute bottom-[9px] left-[11px] h-[3px] w-[3px] rounded-full bg-[hsl(var(--accent))]" />
-    </div>
-  );
-}
-
 function StateBadge({ state, count }: { state: LookupState; count?: number }) {
   if (state === 'loading') {
     return (
       <span className="inline-flex items-center gap-2 rounded-full bg-[hsl(var(--secondary))] px-3 py-1.5 text-xs font-semibold text-[hsl(var(--secondary-foreground))]">
         <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[hsl(var(--accent))]" />
-        Searching
+        Searching Live DB
       </span>
     );
   }
@@ -260,7 +258,7 @@ function EmptyDesk({ state, message, onRetry, whatsappLink }: { state: LookupSta
           <Search size={19} />
         </div>
         <h3 className="pksim-display text-lg font-semibold tracking-[-0.02em] text-[hsl(var(--foreground))]">No record found</h3>
-        <p className="mt-1.5 max-w-[360px] text-sm leading-6 text-[hsl(var(--muted-foreground))]">Contact us on WhatsApp for the latest 2026 records.</p>
+        <p className="mt-1.5 max-w-[360px] text-sm leading-6 text-[hsl(var(--muted-foreground))]">Contact us on WhatsApp for the latest 2026 fresh SIM database records.</p>
         {whatsappLink && (
           <a href={whatsappLink} target="_blank" rel="noreferrer" className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[hsl(var(--primary))] px-4 py-2.5 text-sm font-semibold text-[hsl(var(--primary-foreground))] transition-transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring)_/_0.3)]">
             Contact on WhatsApp
@@ -275,24 +273,8 @@ function EmptyDesk({ state, message, onRetry, whatsappLink }: { state: LookupSta
       <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-[hsl(var(--secondary))] text-[hsl(var(--primary))]">
         <ShieldCheck size={20} />
       </div>
-      <h3 className="pksim-display text-lg font-semibold tracking-[-0.02em] text-[hsl(var(--foreground))]">Awaiting a number</h3>
-      <p className="mt-1.5 text-sm text-[hsl(var(--muted-foreground))]">Enter a Pakistani mobile number to begin.</p>
-    </div>
-  );
-}
-
-function LoadingDesk() {
-  return (
-    <div data-testid="state-loading" className="space-y-3">
-      <div className="rounded-[22px] border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6">
-        <div className="pksim-skeleton mb-3 h-3 w-16 rounded-full" />
-        <div className="pksim-skeleton mb-7 h-6 w-40 rounded-lg" />
-        <div className="grid grid-cols-2 gap-5">
-          <div><div className="pksim-skeleton mb-2 h-2.5 w-20 rounded-full" /><div className="pksim-skeleton h-4 w-28 rounded" /></div>
-          <div><div className="pksim-skeleton mb-2 h-2.5 w-20 rounded-full" /><div className="pksim-skeleton h-4 w-32 rounded" /></div>
-        </div>
-      </div>
-      <div className="pksim-skeleton h-20 rounded-[22px]" />
+      <h3 className="pksim-display text-lg font-semibold tracking-[-0.02em] text-[hsl(var(--foreground))]">Awaiting input</h3>
+      <p className="mt-1.5 text-sm text-[hsl(var(--muted-foreground))]">Enter a Pakistani mobile number or 13-digit CNIC to begin.</p>
     </div>
   );
 }
@@ -322,14 +304,18 @@ function Home() {
       return;
     }
     if (searchMode === 'cnic' && !/^\d{13}$/.test(query)) {
-      setError('CNIC must be exactly 13 digits.');
+      setError('CNIC must be exactly 13 digits without dashes.');
       setState('error');
       return;
     }
+
     setState('loading');
     setError('');
     setPayload(null);
     setSearchedPhone(query);
+
+    const minAnimationDelay = new Promise((resolve) => setTimeout(resolve, 3000));
+
     try {
       const request = async (base: string, parameter: string) => {
         const response = await fetch(`${base}?${parameter}=${encodeURIComponent(query)}`, {
@@ -339,27 +325,36 @@ function Home() {
         if (!response.ok) throw new Error(`Request returned ${response.status}.`);
         return response.json() as Promise<unknown>;
       };
-      let result: unknown = null;
-      try {
-        result = await request(ENDPOINT, 'search');
-      } catch {
-        result = null;
-      }
-      if (!hasSuccessfulRecords(result)) {
+
+      const fetchPromise = (async () => {
+        let result: unknown = null;
         try {
-          result = await request(BACKUP_ENDPOINT, 'number');
+          result = await request(ENDPOINT, 'search');
         } catch {
-          if (!result) throw new Error('Both lookup services are unavailable.');
+          result = null;
         }
-      }
+        if (!hasSuccessfulRecords(result)) {
+          try {
+            result = await request(BACKUP_ENDPOINT, 'number');
+          } catch {
+            if (!result) throw new Error('Both database lookup services are unavailable.');
+          }
+        }
+        return result;
+      })();
+
+      // Wait for both the minimum 3-second animated scanner AND the fetch
+      const [result] = await Promise.all([fetchPromise, minAnimationDelay]);
+
       const nextRecords = recordsFromPayload(result);
       setPayload(result);
       setState(nextRecords.length > 0 ? 'success' : 'empty');
     } catch (lookupError) {
+      await minAnimationDelay;
       setState('error');
       setError(lookupError instanceof Error && lookupError.message.includes('Request returned')
         ? lookupError.message
-        : 'Check your connection and try again.');
+        : 'Check your internet connection and try again.');
     }
   };
 
@@ -382,11 +377,16 @@ function Home() {
 
   let results: ReactNode;
   if (state === 'loading') {
-    results = <LoadingDesk />;
+    results = <SearchingAnimation query={searchedPhone || phone} searchMode={searchMode} />;
   } else if (state === 'success') {
     results = (
-      <div data-testid="results-list" className="space-y-3">
-        {records.map((record, index) => <RecordCard key={`${index}-${Object.keys(record).join('-')}`} record={record} index={index} />)}
+      <div data-testid="results-list" className="space-y-4">
+        {/* Results Area Ad Banner */}
+        <AdSlot slotId="resultsBanner" />
+
+        {records.map((record, index) => (
+          <RecordCard key={`${index}-${Object.keys(record).join('-')}`} record={record} index={index} />
+        ))}
       </div>
     );
   } else {
@@ -395,159 +395,207 @@ function Home() {
 
   return (
     <main className="pksim-shell">
-      <div className="mx-auto flex min-h-[100dvh] w-full max-w-[980px] flex-col px-5 sm:px-8">
-        <header className="pksim-fade-in flex h-[74px] items-center justify-between border-b border-[hsl(var(--border))]">
-          <button type="button" data-testid="button-reset-logo" onClick={resetLookup} className="group flex items-center gap-3 rounded-xl text-left focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring)_/_0.3)]">
-            <LogoMark />
-            <span className="pksim-display text-[19px] font-bold tracking-[-0.05em] text-[hsl(var(--primary))]">PKSIM</span>
-          </button>
-          <div className="flex items-center gap-1">
-            <button type="button" data-testid="button-theme-toggle" onClick={() => setDarkMode((current) => !current)} aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'} className="rounded-xl px-3 py-2 text-lg text-[hsl(var(--muted-foreground))] transition-colors hover:bg-[hsl(var(--secondary))] hover:text-[hsl(var(--primary))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring)_/_0.25)]">
-              {darkMode ? <Sun size={17} /> : <Moon size={17} />}
-            </button>
-            {state !== 'idle' && (
-              <button type="button" data-testid="button-search-again" onClick={resetLookup} className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-[hsl(var(--muted-foreground))] transition-colors hover:bg-[hsl(var(--secondary))] hover:text-[hsl(var(--primary))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring)_/_0.25)]">
-                <RotateCcw size={15} />
-                <span className="hidden sm:inline">Search again</span>
+      <div className="mx-auto flex min-h-[100dvh] w-full max-w-[980px] flex-col justify-between px-5 sm:px-8">
+        <div>
+          {/* Header */}
+          <header className="pksim-fade-in flex h-[74px] items-center justify-between border-b border-[hsl(var(--border))]">
+            <Link href="/" onClick={resetLookup} className="group flex items-center gap-3 rounded-xl text-left focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring)_/_0.3)]">
+              <LinkShareLogo size={38} />
+              <div>
+                <span className="pksim-display text-[19px] font-bold tracking-[-0.05em] text-[hsl(var(--primary))]">
+                  PKSIM
+                </span>
+                <span className="ml-2 hidden sm:inline-block rounded-full bg-[hsl(var(--secondary))] px-2 py-0.5 text-[10px] font-bold text-[hsl(var(--secondary-foreground))]">
+                  by LinkShare
+                </span>
+              </div>
+            </Link>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                data-testid="button-theme-toggle"
+                onClick={() => setDarkMode((current) => !current)}
+                aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+                className="rounded-xl px-3 py-2 text-lg text-[hsl(var(--muted-foreground))] transition-colors hover:bg-[hsl(var(--secondary))] hover:text-[hsl(var(--primary))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring)_/_0.25)]"
+              >
+                {darkMode ? <Sun size={17} /> : <Moon size={17} />}
               </button>
-            )}
-          </div>
-        </header>
 
-        <div className="flex flex-1 flex-col items-center py-14 sm:py-20">
-          <section className="pksim-rise-in pksim-delay-1 w-full max-w-[610px] text-center">
-            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[hsl(145_54%_84%)] bg-[hsl(145_60%_97%)] px-3 py-1.5 text-xs font-semibold text-[hsl(var(--primary))]">
-              <span className="pksim-blink h-1.5 w-1.5 rounded-full bg-[hsl(var(--primary))]" />
-              SIM data 2026
+              {state !== 'idle' && (
+                <button
+                  type="button"
+                  data-testid="button-search-again"
+                  onClick={resetLookup}
+                  className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-[hsl(var(--muted-foreground))] transition-colors hover:bg-[hsl(var(--secondary))] hover:text-[hsl(var(--primary))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring)_/_0.25)]"
+                >
+                  <RotateCcw size={15} />
+                  <span className="hidden sm:inline">Search again</span>
+                </button>
+              )}
+
+              <Link
+                href="/admin"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 py-2 text-xs font-semibold text-[hsl(var(--muted-foreground))] transition-colors hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))]"
+                title="Admin Login & Ads Control"
+              >
+                <Lock size={13} />
+                <span className="hidden sm:inline">Admin</span>
+              </Link>
             </div>
-            <h1 data-testid="text-page-title" className="pksim-display text-[clamp(2.7rem,7vw,4.5rem)] font-semibold leading-[0.98] tracking-[-0.075em] text-[hsl(var(--foreground))]">
-              SIM data, <span className="text-[hsl(var(--primary))]">simply.</span>
-            </h1>
-            <p className="mx-auto mt-5 max-w-[470px] text-[15px] leading-7 text-[hsl(var(--muted-foreground))]">
-              Enter a number to view its record.
-            </p>
-            <div className="mx-auto mt-8 flex w-fit rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-1">
-              <button type="button" data-testid="tab-search-number" onClick={() => changeSearchMode('number')} className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${searchMode === 'number' ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]' : 'text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--secondary))]'}`}>Search by number</button>
-              <button type="button" data-testid="tab-search-cnic" onClick={() => changeSearchMode('cnic')} className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${searchMode === 'cnic' ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]' : 'text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--secondary))]'}`}>Search by CNIC</button>
-            </div>
-            <form onSubmit={performLookup} className="mx-auto mt-3 max-w-[610px] rounded-[18px] border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-2 shadow-[0_14px_34px_hsl(157_35%_19%_/_0.07)]">
-              <div className="flex items-center gap-2">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[hsl(var(--secondary))] text-[hsl(var(--primary))]">
-                  <Search size={19} strokeWidth={2.2} />
-                </div>
-                <input
-                  id="phone-number"
-                  type="tel"
-                  inputMode="tel"
-                  autoComplete="tel"
-                  data-testid="input-phone-number"
-                  value={phone}
-                  onChange={(event) => setPhone(event.target.value)}
-                  placeholder={searchMode === 'number' ? 'Enter any number e.g. 03001234567' : 'Enter 13-digit CNIC'}
-                  className="min-w-0 flex-1 bg-transparent px-2 text-[15px] text-left font-medium tracking-[0.01em] text-[hsl(var(--foreground))] outline-none placeholder:text-[hsl(var(--muted-foreground)_/_0.65)]"
-                  aria-label="Phone number"
-                />
-                <button type="submit" data-testid="button-submit-lookup" disabled={state === 'loading'} className="flex h-12 shrink-0 items-center gap-2 rounded-xl bg-[hsl(var(--primary))] px-5 text-sm font-bold text-[hsl(var(--primary-foreground))] transition-transform hover:-translate-y-0.5 hover:bg-[hsl(157_66%_19%)] disabled:cursor-wait disabled:opacity-70 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring)_/_0.3)]">
-                  {state === 'loading' ? 'Searching' : 'Search'}
-                  <ArrowUpRight size={17} />
+          </header>
+
+          {/* Top Header Banner Ad Placement */}
+          <AdSlot slotId="headerBanner" />
+
+          {/* Main Hero / Search Area */}
+          <div className="flex flex-col items-center py-10 sm:py-16">
+            <section className="pksim-rise-in pksim-delay-1 w-full max-w-[610px] text-center">
+              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[hsl(145_54%_84%)] bg-[hsl(145_60%_97%)] px-3.5 py-1.5 text-xs font-semibold text-[hsl(var(--primary))]">
+                <span className="pksim-blink h-1.5 w-1.5 rounded-full bg-[hsl(var(--primary))]" />
+                Live SIM & CNIC Data 2026
+              </div>
+
+              {/* Requirement #4: Heading "SIM data, LinkShare" */}
+              <h1 data-testid="text-page-title" className="pksim-display text-[clamp(2.7rem,7vw,4.5rem)] font-semibold leading-[0.98] tracking-[-0.075em] text-[hsl(var(--foreground))]">
+                SIM data, <span className="text-[hsl(var(--primary))]">LinkShare</span>
+              </h1>
+
+              <p className="mx-auto mt-4 max-w-[480px] text-[15px] leading-7 text-[hsl(var(--muted-foreground))]">
+                Enter any Pakistani phone number or CNIC to lookup live records instantly.
+              </p>
+
+              <div className="mx-auto mt-7 flex w-fit rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-1">
+                <button
+                  type="button"
+                  data-testid="tab-search-number"
+                  onClick={() => changeSearchMode('number')}
+                  className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
+                    searchMode === 'number'
+                      ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] shadow-sm'
+                      : 'text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--secondary))]'
+                  }`}
+                >
+                  Search by Number
+                </button>
+                <button
+                  type="button"
+                  data-testid="tab-search-cnic"
+                  onClick={() => changeSearchMode('cnic')}
+                  className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
+                    searchMode === 'cnic'
+                      ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] shadow-sm'
+                      : 'text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--secondary))]'
+                  }`}
+                >
+                  Search by CNIC
                 </button>
               </div>
-              {state === 'error' && error && (
-                <p data-testid="text-inline-error" className="mt-2 flex items-center gap-1.5 px-2 text-left text-sm font-medium text-[hsl(var(--destructive))]">
-                  <AlertCircle size={15} /> {error}
-                </p>
-              )}
-            </form>
-          </section>
 
-          <section className="pksim-rise-in pksim-delay-2 mt-12 w-full max-w-[760px] min-w-0" aria-live="polite">
-            {(state !== 'idle' || searchedPhone) && (
-              <div className="mb-3 flex items-center justify-between px-1">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.17em] text-[hsl(var(--muted-foreground))]">Result</p>
-                  {searchedPhone && <p data-testid="text-searched-phone" className="mt-1 text-sm font-medium text-[hsl(var(--foreground))]">{searchedPhone}</p>}
+              <form onSubmit={performLookup} className="mx-auto mt-3 max-w-[610px] rounded-[18px] border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-2 shadow-[0_14px_34px_hsl(157_35%_19%_/_0.07)]">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[hsl(var(--secondary))] text-[hsl(var(--primary))]">
+                    <Search size={19} strokeWidth={2.2} />
+                  </div>
+                  <input
+                    id="phone-number"
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    data-testid="input-phone-number"
+                    value={phone}
+                    onChange={(event) => setPhone(event.target.value)}
+                    placeholder={searchMode === 'number' ? 'Enter number e.g. 03001234567' : 'Enter 13-digit CNIC'}
+                    className="min-w-0 flex-1 bg-transparent px-2 text-[15px] text-left font-medium tracking-[0.01em] text-[hsl(var(--foreground))] outline-none placeholder:text-[hsl(var(--muted-foreground)_/_0.65)]"
+                    aria-label="Phone number or CNIC"
+                  />
+                  <button
+                    type="submit"
+                    data-testid="button-submit-lookup"
+                    disabled={state === 'loading'}
+                    className="flex h-12 shrink-0 items-center gap-2 rounded-xl bg-[hsl(var(--primary))] px-5 text-sm font-bold text-[hsl(var(--primary-foreground))] transition-transform hover:-translate-y-0.5 hover:bg-[hsl(157_66%_19%)] disabled:cursor-wait disabled:opacity-70 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring)_/_0.3)]"
+                  >
+                    {state === 'loading' ? 'Searching...' : 'Search'}
+                    <ArrowUpRight size={17} />
+                  </button>
                 </div>
-                <StateBadge state={state} count={records.length} />
-              </div>
-            )}
-            {state === 'empty' && <EmptyDesk state={state} message={error} whatsappLink={whatsappLink} />}
-            {state !== 'empty' && results}
-          </section>
+                {state === 'error' && error && (
+                  <p data-testid="text-inline-error" className="mt-2 flex items-center gap-1.5 px-2 text-left text-sm font-medium text-[hsl(var(--destructive))]">
+                    <AlertCircle size={15} /> {error}
+                  </p>
+                )}
+              </form>
+
+              {/* Requirement #2: Under Search Ad Placement / 720p */}
+              <AdSlot slotId="searchBanner" />
+            </section>
+
+            {/* Results / Scanner Container */}
+            <section className="pksim-rise-in pksim-delay-2 mt-8 w-full max-w-[760px] min-w-0" aria-live="polite">
+              {(state !== 'idle' || searchedPhone) && (
+                <div className="mb-3 flex items-center justify-between px-1">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.17em] text-[hsl(var(--muted-foreground))]">Result</p>
+                    {searchedPhone && <p data-testid="text-searched-phone" className="mt-1 text-sm font-medium text-[hsl(var(--foreground))]">{searchedPhone}</p>}
+                  </div>
+                  <StateBadge state={state} count={records.length} />
+                </div>
+              )}
+              {state === 'empty' && <EmptyDesk state={state} message={error} whatsappLink={whatsappLink} />}
+              {state !== 'empty' && results}
+            </section>
+          </div>
         </div>
-      </div>
-    </main>
-  );
-}
 
-function AdminPanel() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [channelLink, setChannelLink] = useState(() => localStorage.getItem(CHANNEL_STORAGE_KEY) ?? '');
-  const [saved, setSaved] = useState(false);
-  const [loginError, setLoginError] = useState('');
+        {/* Bottom Section: Footer Ad, Disclaimer, and Footer */}
+        <div className="pb-8">
+          {/* Requirement #2: Bottom Footer Banner Ad */}
+          <AdSlot slotId="footerBanner" />
 
-  useEffect(() => {
-    document.documentElement.classList.remove('dark');
-  }, []);
-
-  const login = (event: FormEvent) => {
-    event.preventDefault();
-    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-      setLoggedIn(true);
-      setLoginError('');
-    } else {
-      setLoginError('Invalid username or password.');
-    }
-  };
-
-  const saveSettings = (event: FormEvent) => {
-    event.preventDefault();
-    localStorage.setItem(CHANNEL_STORAGE_KEY, channelLink.trim());
-    setChannelLink(channelLink.trim());
-    setSaved(true);
-    window.setTimeout(() => setSaved(false), 1800);
-  };
-
-  return (
-    <main className="min-h-[100dvh] bg-white text-[hsl(var(--foreground))]">
-      <div className="mx-auto flex min-h-[100dvh] w-full max-w-[760px] flex-col px-5 sm:px-8">
-        <header className="flex h-[74px] items-center border-b border-[hsl(var(--border))]">
-          <a href="/" className="flex items-center gap-3">
-            <LogoMark />
-            <span className="pksim-display text-[19px] font-bold tracking-[-0.05em] text-[hsl(var(--primary))]">PKSIM</span>
-          </a>
-        </header>
-        <div className="flex flex-1 items-center justify-center py-12">
-          {!loggedIn ? (
-            <form onSubmit={login} className="w-full max-w-[390px] rounded-[22px] border border-[hsl(var(--border))] bg-white p-7 shadow-[0_14px_34px_hsl(157_35%_19%_/_0.07)]">
-              <p className="text-xs font-bold uppercase tracking-[0.17em] text-[hsl(var(--muted-foreground))]">Admin</p>
-              <h1 className="pksim-display mt-3 text-3xl font-semibold tracking-[-0.05em]">Sign in</h1>
-              <div className="mt-7 space-y-4">
-                <label className="block text-sm font-semibold">
-                  Username
-                  <input value={username} onChange={(event) => setUsername(event.target.value)} className="mt-2 h-11 w-full rounded-xl border border-[hsl(var(--border))] px-3 outline-none focus:border-[hsl(var(--primary))]" autoComplete="username" />
-                </label>
-                <label className="block text-sm font-semibold">
-                  Password
-                  <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} className="mt-2 h-11 w-full rounded-xl border border-[hsl(var(--border))] px-3 outline-none focus:border-[hsl(var(--primary))]" autoComplete="current-password" />
-                </label>
+          {/* Requirement #5: Note above footer */}
+          <div className="mt-6 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card)_/_0.7)] p-4 text-xs leading-5 text-[hsl(var(--muted-foreground))]">
+            <div className="flex items-start gap-2.5">
+              <AlertTriangle className="h-4 w-4 shrink-0 text-amber-500 mt-0.5" />
+              <div>
+                <p className="font-bold text-[hsl(var(--foreground))]">Public Database & Legal Notice:</p>
+                <p className="mt-0.5">
+                  This SIM database information is publicly available across open internet directories. We are not hosting or storing any kind of private or personal data on our servers. For any legal concerns, copyright inquiries, or removal requests, please contact the respective third-party provider or hosting sources.
+                </p>
               </div>
-              {loginError && <p className="mt-3 text-sm font-medium text-[hsl(var(--destructive))]">{loginError}</p>}
-              <button type="submit" className="mt-6 h-11 w-full rounded-xl bg-[hsl(var(--primary))] text-sm font-bold text-white transition-transform hover:-translate-y-0.5">Sign in</button>
-            </form>
-          ) : (
-            <form onSubmit={saveSettings} className="w-full max-w-[520px] rounded-[22px] border border-[hsl(var(--border))] bg-white p-7 shadow-[0_14px_34px_hsl(157_35%_19%_/_0.07)]">
-              <p className="text-xs font-bold uppercase tracking-[0.17em] text-[hsl(var(--muted-foreground))]">Settings</p>
-              <h1 className="pksim-display mt-3 text-3xl font-semibold tracking-[-0.05em]">WhatsApp channel</h1>
-              <p className="mt-2 text-sm leading-6 text-[hsl(var(--muted-foreground))]">Add the channel link shown when a lookup has no result.</p>
-              <label className="mt-7 block text-sm font-semibold">
-                Channel link
-                <input type="url" value={channelLink} onChange={(event) => setChannelLink(event.target.value)} placeholder="https://chat.whatsapp.com/..." className="mt-2 h-11 w-full rounded-xl border border-[hsl(var(--border))] px-3 outline-none focus:border-[hsl(var(--primary))]" />
-              </label>
-              <button type="submit" className="mt-6 h-11 rounded-xl bg-[hsl(var(--primary))] px-5 text-sm font-bold text-white transition-transform hover:-translate-y-0.5">{saved ? 'Saved' : 'Save settings'}</button>
-            </form>
-          )}
+            </div>
+          </div>
+
+          {/* Requirement #6: Footer with PKSIM - Powered by LinkShare link */}
+          <footer className="mt-6 flex flex-col items-center justify-between gap-3 border-t border-[hsl(var(--border))] pt-6 text-xs text-[hsl(var(--muted-foreground))] sm:flex-row">
+            <p>
+              PKSIM — Powered by{' '}
+              <a
+                href="https://linksshare.online/"
+                target="_blank"
+                rel="noreferrer"
+                className="font-bold text-[hsl(var(--primary))] underline hover:opacity-80"
+              >
+                LinkShare
+              </a>
+            </p>
+
+            <div className="flex items-center gap-4">
+              <Link href="/" className="hover:text-[hsl(var(--foreground))]">
+                Home
+              </Link>
+              <Link href="/admin" className="hover:text-[hsl(var(--foreground))]">
+                Admin
+              </Link>
+              <a
+                href="https://linksshare.online/"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 hover:text-[hsl(var(--primary))]"
+              >
+                <span>linksshare.online</span>
+                <ExternalLink size={11} />
+              </a>
+            </div>
+          </footer>
         </div>
       </div>
     </main>
@@ -555,7 +603,16 @@ function AdminPanel() {
 }
 
 function App() {
-  return window.location.pathname.replace(/\/+$/, '') === '/admin' ? <AdminPanel /> : <Home />;
+  return (
+    <>
+      <GlobalAdScripts />
+      <Switch>
+        <Route path="/" component={Home} />
+        <Route path="/admin" component={AdminPanel} />
+        <Route component={NotFound} />
+      </Switch>
+    </>
+  );
 }
 
 export default App;
