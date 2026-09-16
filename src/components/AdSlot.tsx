@@ -103,9 +103,6 @@ export function AdSlot({ slotId, className = '', showBorder = false }: AdSlotPro
           : ''
       } ${className}`}
     >
-      <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.18em] text-[hsl(var(--muted-foreground)_/_0.6)]">
-        Advertisement
-      </span>
       <div
         ref={containerRef}
         className="w-full flex items-center justify-center min-h-[50px] overflow-x-auto text-center"

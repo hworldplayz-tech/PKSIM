@@ -1,5 +1,5 @@
 export const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyCdg8-138Xy2wWHeQP1ayktNeIMBHAF7W8",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyCdg8-138Xy2wWHeQP1ayktNeIMBHAF7W8",
   authDomain: "pksim-b0836.firebaseapp.com",
   projectId: "pksim-b0836",
   storageBucket: "pksim-b0836.firebasestorage.app",

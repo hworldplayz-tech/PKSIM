@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { Route, Switch, Link } from 'wouter';
 import {
   AlertCircle,
@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import LinkShareLogo from '@/components/LinkShareLogo';
 import AdSlot from '@/components/AdSlot';
+import AdsterraBanner from '@/components/AdsterraBanner';
+import CountdownAdScreen from '@/components/CountdownAdScreen';
 import GlobalAdScripts from '@/components/GlobalAdScripts';
 import SearchingAnimation from '@/components/SearchingAnimation';
 import AdminPanel from '@/components/AdminPanel';
@@ -25,9 +27,10 @@ import ShareFloatingButton from '@/components/ShareFloatingButton';
 import { getWhatsAppChannel, SETTINGS_UPDATED_EVENT } from '@/config/settings';
 import { initFirebaseAnalyticsScript, logSearchAnalytics } from '@/config/firebase';
 
-type LookupState = 'idle' | 'loading' | 'success' | 'empty' | 'error';
+type LookupState = 'idle' | 'countdown' | 'loading' | 'success' | 'empty' | 'error';
 type JsonRecord = Record<string, unknown>;
 
+const ADSTERRA_DIRECT_LINK = 'https://verticallysaturate.com/s2kb34qrk?key=6d6ee76249c1e8f55a4799c82580bc5e';
 const ENDPOINT = 'https://sim-db-api.faizankhichi.me/';
 const BACKUP_ENDPOINT = 'https://sim-data.ftgmhacks.workers.dev/';
 
@@ -128,12 +131,12 @@ function preferredValue(record: JsonRecord, keys: string[]) {
   return entry ? displayValue(entry[1]) : null;
 }
 
-function StateBadge({ state, count }: { state: LookupState; count?: number }) {
-  if (state === 'loading') {
+function StateBadge({ state, count, countdown }: { state: LookupState; count?: number; countdown?: number }) {
+  if (state === 'countdown' || state === 'loading') {
     return (
       <span className="inline-flex items-center gap-2 rounded-full bg-[hsl(var(--secondary))] px-3 py-1.5 text-xs font-semibold text-[hsl(var(--secondary-foreground))]">
         <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[hsl(var(--accent))]" />
-        Searching Live DB
+        {state === 'countdown' ? `Countdown (${countdown ?? 10}s)` : 'Searching Live DB'}
       </span>
     );
   }
@@ -291,6 +294,13 @@ function Home() {
   const [searchMode, setSearchMode] = useState<'number' | 'cnic'>('number');
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('pksim-theme') === 'dark');
   const [whatsappLink, setWhatsappLink] = useState(() => getWhatsAppChannel());
+  const [countdown, setCountdown] = useState(10);
+  const pendingLookupRef = useRef<{ result: unknown; error: string | null; isDone: boolean }>({
+    result: null,
+    error: null,
+    isDone: false,
+  });
+
   const records = useMemo(() => recordsFromPayload(payload), [payload]);
 
   useEffect(() => {
@@ -324,24 +334,33 @@ function Home() {
       return;
     }
 
-    setState('loading');
+    // 1. User follows smart/direct link of Adsterra to another page
+    try {
+      window.open(ADSTERRA_DIRECT_LINK, '_blank', 'noopener,noreferrer');
+    } catch (err) {
+      console.error('Direct link opening failed:', err);
+    }
+
+    // 2. Start 10-second countdown state
+    setState('countdown');
+    setCountdown(10);
     setError('');
     setPayload(null);
     setSearchedPhone(query);
+    pendingLookupRef.current = { result: null, error: null, isDone: false };
 
-    const minAnimationDelay = new Promise((resolve) => setTimeout(resolve, 3000));
+    // Parallel background database lookup
+    (async () => {
+      try {
+        const request = async (base: string, parameter: string) => {
+          const response = await fetch(`${base}?${parameter}=${encodeURIComponent(query)}`, {
+            method: 'GET',
+            headers: { Accept: 'application/json' },
+          });
+          if (!response.ok) throw new Error(`Request returned ${response.status}.`);
+          return response.json() as Promise<unknown>;
+        };
 
-    try {
-      const request = async (base: string, parameter: string) => {
-        const response = await fetch(`${base}?${parameter}=${encodeURIComponent(query)}`, {
-          method: 'GET',
-          headers: { Accept: 'application/json' },
-        });
-        if (!response.ok) throw new Error(`Request returned ${response.status}.`);
-        return response.json() as Promise<unknown>;
-      };
-
-      const fetchPromise = (async () => {
         let result: unknown = null;
         try {
           result = await request(ENDPOINT, 'search');
@@ -355,45 +374,87 @@ function Home() {
             if (!result) throw new Error('Both database lookup services are unavailable.');
           }
         }
-        return result;
-      })();
-
-      // Wait for both the minimum 3-second animated scanner AND the fetch
-      const [result] = await Promise.all([fetchPromise, minAnimationDelay]);
-
-      const nextRecords = recordsFromPayload(result);
-      setPayload(result);
-      const isSuccess = nextRecords.length > 0;
-      setState(isSuccess ? 'success' : 'empty');
-
-      // Log to Firebase Analytics & Firestore
-      void logSearchAnalytics({
-        query,
-        searchMode,
-        status: isSuccess ? 'found' : 'no_record',
-        recordsCount: nextRecords.length,
-      });
-    } catch (lookupError) {
-      await minAnimationDelay;
-      setState('error');
-      setError(lookupError instanceof Error && lookupError.message.includes('Request returned')
-        ? lookupError.message
-        : 'Check your internet connection and try again.');
-
-      void logSearchAnalytics({
-        query,
-        searchMode,
-        status: 'error',
-        recordsCount: 0,
-      });
-    }
+        pendingLookupRef.current = { result, error: null, isDone: true };
+      } catch (lookupError) {
+        pendingLookupRef.current = {
+          result: null,
+          error: lookupError instanceof Error && lookupError.message.includes('Request returned')
+            ? lookupError.message
+            : 'Check your internet connection and try again.',
+          isDone: true,
+        };
+      }
+    })();
   };
+
+  // Countdown ticks only when tab is visible so when user comes back from the ad tab,
+  // they see the 10 sec countdown
+  useEffect(() => {
+    if (state !== 'countdown') return;
+
+    const timer = setInterval(() => {
+      if (!document.hidden) {
+        setCountdown((current) => {
+          if (current <= 1) {
+            clearInterval(timer);
+            return 0;
+          }
+          return current - 1;
+        });
+      }
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [state]);
+
+  // When countdown completes, finalize and display results
+  useEffect(() => {
+    if (state !== 'countdown' || countdown > 0) return;
+
+    const finalize = () => {
+      const { result, error: lookupErr } = pendingLookupRef.current;
+      if (lookupErr) {
+        setState('error');
+        setError(lookupErr);
+        void logSearchAnalytics({
+          query: searchedPhone,
+          searchMode,
+          status: 'error',
+          recordsCount: 0,
+        });
+      } else {
+        const nextRecords = recordsFromPayload(result);
+        setPayload(result);
+        const isSuccess = nextRecords.length > 0;
+        setState(isSuccess ? 'success' : 'empty');
+        void logSearchAnalytics({
+          query: searchedPhone,
+          searchMode,
+          status: isSuccess ? 'found' : 'no_record',
+          recordsCount: nextRecords.length,
+        });
+      }
+    };
+
+    if (pendingLookupRef.current.isDone) {
+      finalize();
+    } else {
+      const waitInterval = setInterval(() => {
+        if (pendingLookupRef.current.isDone) {
+          clearInterval(waitInterval);
+          finalize();
+        }
+      }, 200);
+      return () => clearInterval(waitInterval);
+    }
+  }, [countdown, state, searchedPhone, searchMode]);
 
   const resetLookup = () => {
     setPhone('');
     setSearchedPhone('');
     setPayload(null);
     setError('');
+    setCountdown(10);
     setState('idle');
   };
 
@@ -401,19 +462,26 @@ function Home() {
     setSearchMode(mode);
     setPhone('');
     setError('');
+    setCountdown(10);
     setState('idle');
     setPayload(null);
     setSearchedPhone('');
   };
 
   let results: ReactNode;
-  if (state === 'loading') {
-    results = <SearchingAnimation query={searchedPhone || phone} searchMode={searchMode} />;
+  if (state === 'countdown' || state === 'loading') {
+    results = (
+      <CountdownAdScreen
+        countdown={countdown}
+        query={searchedPhone || phone}
+        searchMode={searchMode}
+      />
+    );
   } else if (state === 'success') {
     results = (
       <div data-testid="results-list" className="space-y-4">
-        {/* Results Area Ad Banner */}
-        <AdSlot slotId="resultsBanner" />
+        {/* Direct Adsterra 300x250 Banner above results */}
+        <AdsterraBanner />
 
         {records.map((record, index) => (
           <RecordCard key={`${index}-${Object.keys(record).join('-')}`} record={record} index={index} />
@@ -466,9 +534,6 @@ function Home() {
               )}
             </div>
           </header>
-
-          {/* Top Header Banner Ad Placement */}
-          <AdSlot slotId="headerBanner" />
 
           {/* Main Hero / Search Area */}
           <div className="flex flex-col items-center py-6 sm:py-14">
@@ -537,10 +602,10 @@ function Home() {
                   <button
                     type="submit"
                     data-testid="button-submit-lookup"
-                    disabled={state === 'loading'}
+                    disabled={state === 'loading' || state === 'countdown'}
                     className="flex h-10 sm:h-12 shrink-0 items-center gap-1 sm:gap-2 rounded-xl bg-[hsl(var(--primary))] px-3.5 sm:px-5 text-xs sm:text-sm font-bold text-[hsl(var(--primary-foreground))] transition-transform hover:-translate-y-0.5 hover:bg-[hsl(157_66%_19%)] disabled:cursor-wait disabled:opacity-70 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring)_/_0.3)]"
                   >
-                    <span>{state === 'loading' ? 'Searching' : 'Search'}</span>
+                    <span>{state === 'loading' || state === 'countdown' ? 'Searching' : 'Search'}</span>
                     <ArrowUpRight size={14} className="sm:hidden" />
                     <ArrowUpRight size={17} className="hidden sm:block" />
                   </button>
@@ -551,9 +616,6 @@ function Home() {
                   </p>
                 )}
               </form>
-
-              {/* Requirement #2: Under Search Ad Placement / 720p */}
-              <AdSlot slotId="searchBanner" />
             </section>
 
             {/* Results / Scanner Container */}
@@ -564,7 +626,7 @@ function Home() {
                     <p className="text-xs font-bold uppercase tracking-[0.17em] text-[hsl(var(--muted-foreground))]">Result</p>
                     {searchedPhone && <p data-testid="text-searched-phone" className="mt-1 text-sm font-medium text-[hsl(var(--foreground))]">{searchedPhone}</p>}
                   </div>
-                  <StateBadge state={state} count={records.length} />
+                  <StateBadge state={state} count={records.length} countdown={countdown} />
                 </div>
               )}
               {state === 'empty' && <EmptyDesk state={state} message={error} whatsappLink={whatsappLink} />}
@@ -577,9 +639,6 @@ function Home() {
         <div className="pb-8">
           {/* Requirement #1: Follow Us / Join WhatsApp Community Section above footer */}
           <FollowSection />
-
-          {/* Requirement #2: Bottom Footer Banner Ad */}
-          <AdSlot slotId="footerBanner" />
 
           {/* Requirement #5: Note above footer */}
           <div className="mt-6 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card)_/_0.7)] p-4 text-xs leading-5 text-[hsl(var(--muted-foreground))]">

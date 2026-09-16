@@ -1,0 +1,6 @@
+{
+  "name": "PKSIM — SIM Data Lookup",
+  "description": "Fast Pakistani SIM and CNIC Database Record Lookup tool. Powered by LinkShare.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
