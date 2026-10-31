@@ -1,11 +1,11 @@
 export const FIREBASE_CONFIG = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyCdg8-138Xy2wWHeQP1ayktNeIMBHAF7W8",
-  authDomain: "pksim-b0836.firebaseapp.com",
-  projectId: "pksim-b0836",
-  storageBucket: "pksim-b0836.firebasestorage.app",
-  messagingSenderId: "51709873295",
-  appId: "1:51709873295:web:ddfc24520c86ce793bf4fa",
-  measurementId: "G-8T5KVL6WL1"
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "pksim-b0836.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "pksim-b0836",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "pksim-b0836.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "51709873295",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:51709873295:web:ddfc24520c86ce793bf4fa",
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-8T5KVL6WL1"
 };
 
 export const FIRESTORE_BASE_URL = `https://firestore.googleapis.com/v1/projects/${FIREBASE_CONFIG.projectId}/databases/(default)/documents`;
