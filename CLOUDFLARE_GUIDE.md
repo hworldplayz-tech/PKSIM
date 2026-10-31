@@ -4,29 +4,12 @@ Your project is built with **React + Vite**, which is **100% compatible and opti
 
 ---
 
-## 🔍 Why the previous build failed:
-In the Cloudflare build log:
-```text
-If are uploading a directory of assets, you can either:
-- Specify the path to the directory of assets via the command line: (ex: `npx wrangler deploy --assets=./dist`)
-- Or add the following to your "wrangler.toml" file:
+## 🔍 Issues Resolved:
 
-[assets]
-directory = "./dist"
-```
-Cloudflare's build system (`wrangler deploy`) looks for the `[assets]` block when deploying static assets. Without it, Wrangler expects a backend Worker script (`main = "src/index.ts"`).
-
-We have updated `wrangler.toml` with:
-```toml
-name = "pksim"
-compatibility_date = "2024-09-23"
-
-[assets]
-directory = "./dist"
-not_found_handling = "single-page-application"
-```
-
-Now Cloudflare knows to upload the `./dist` folder and handle Single Page Application (SPA) routing automatically.
+1. **Wrangler assets config**: Added `[assets] directory = "./dist"` to `wrangler.toml`.
+2. **Infinite loop in _redirects**: Cloudflare Workers Assets uses `not_found_handling = "single-page-application"` in `wrangler.toml` for SPA routing. Having `/* /index.html 200` in `_redirects` caused Cloudflare to throw:
+   `Invalid _redirects configuration: Infinite loop detected in this rule.`
+   We removed `_redirects` so Cloudflare's native SPA engine handles all routing without conflict.
 
 ---
 
